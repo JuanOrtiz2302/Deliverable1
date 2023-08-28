@@ -1,0 +1,354 @@
+---
+title: "Tidyverse Classwork"
+author: "Juan David Ortiz Cortés"
+date: "2023-08-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 5.2.4 Exercises
+
+To start with this workshop, the first thing that was done was to include the necessary libraries for its development. The libraries that were used were:
+
+```{r message = FALSE}
+library("nycflights13")
+library("tidyverse")
+```
+
+The dataset used is for flights that departed from New York City in 2013.
+
+```{r echo = FALSE}
+allflights <- nycflights13::flights
+library(knitr)
+kable(allflights[1:10,1:10], caption = "Small view of nycflights13 dataset.")
+```
+
+### *Item 1 - Find all flights that:*
+
+#### *1. Had an arrival delay of two or more hours:*
+
+Since the `arr_delay` variable is measured in minutes, flights with an arrival delay of 120 minutes or more are searched for; this is done through the `filter` function.
+
+```{r}
+filter1 <- filter(flights, arr_delay >= 120)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter1[1:8,1:10], caption = "Small view of Filter1.")
+```
+
+#### *2.* *Flew to Houston (`IAH` or `HOU`):*
+
+The flights that flew to Houston are those flights where the destination (dest) is either `IAH` or `HOU`; this is done through the `filter` function.
+
+```{r}
+filter2 <- filter(flights, dest %in% c("IAH", "HOU"))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter2[1:8,1:10], caption = "Small view of Filter2.")
+```
+
+#### *3.* *Were operated by United, American, or Delta:*
+
+In the `nycflights13` dataset, the column carrier indicates the airline, but it uses two-character carrier codes.
+
+```{r}
+airlines <- airlines
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(airlines[1:16,1:2], caption = "Small view of Airlines.")
+```
+
+So, the carrier code for Delta is `DL`, for American is `AA`, and for United is `UA`. Using these carriers codes, it is check whether carrier is one of those; this is done through the `filter` function.
+
+```{r}
+filter3 <- filter(flights, carrier %in% c("AA", "DL", "UA"))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter3[1:8,1:10], caption = "Small view of Filter3.")
+```
+
+#### *4. Departed in summer (July, August, and September):*
+
+The variable `month` has the month, and it is numeric. So, the summer flights are those that departed in months 7 (July), 8 (August), and 9 (September); this is done through the `filter` function.
+
+```{r}
+filter4 <- filter(flights, month >= 7, month <= 9)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter4[1:8,1:10], caption = "Small view of Filter4.")
+```
+
+#### *5. Arrived more than two hours late, but didn't leave late:*
+
+Flights that arrived more than two hours late, but didn't leave late will have an arrival delay of more than 120 minutes `(arr_delay > 120)` and a non-positive departure delay `(dep_delay <= 0)`; this is done through the `filter` function.
+
+```{r}
+filter5 <- filter(flights, arr_delay > 120, dep_delay <= 0)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter5[1:8,1:10], caption = "Small view of Filter5.")
+```
+
+#### *6. Were delayed by at least an hour, but made up over 30 minutes in flight:*
+
+If a flight was delayed by at least an hour, then `dep_delay >= 60`. If the flight didn't make up any time in the air, then its arrival would be delayed by the same amount as its departure, meaning `dep_delay == arr_delay`, or alternatively, `dep_delay - arr_delay == 0`. If it makes up over 30 minutes in the air, then the arrival delay must be at least 30 minutes less than the departure delay, which is stated as `dep_delay - arr_delay > 30`; this is done through the `filter` function.
+
+```{r}
+filter6 <- filter(flights, dep_delay >= 60, dep_delay - arr_delay > 30)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter6[1:8,1:10], caption = "Small view of Filter6.")
+```
+
+#### *7. Departed between midnight and 6am (inclusive):*
+
+In `dep_time`, midnight is represented by `2400`, not `0`. Therefore, this means cannot simply check that `dep_time < 600`, because also have to consider the special case of midnight; this is done through the `filter` function.
+
+```{r}
+filter7 <- filter(flights, dep_time <= 600 | dep_time == 2400)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter7[1:8,1:10], caption = "Small view of Filter7.")
+```
+
+### *Item 2 - Another useful dplyr filtering helper is `between()`. What does it do? Can you use it to simplify the code needed to answer the previous challenges?:*
+
+Yes, because the expression `between(x, left, right)` is equivalent to `x >= left & x <= right`. So, of the answers in the previous exercise, it could simplify the statement of departed in summer `(month >= 7 & month <= 9)` using the `between()` function; this is done through the `filter` function.
+
+```{r}
+filter8 <- filter(flights, between(month, 7, 9))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(filter8[1:6,1:10], caption = "Small view of Filter8.")
+```
+
+## 5.3.1 Exercises
+
+### *Item 1 - How could you use `arrange()` to sort all missing values to the start? (Hint: use `is.na()`):*
+
+The `arrange()` function puts NA values last. So, the flights will first be sorted by `desc(is.na(dep_time))`. Since `desc(is.na(dep_time))` is either `TRUE` when `dep_time` is missing, or `FALSE`, when it is not, the rows with missing values of `dep_time` will come first, since `TRUE > FALSE`; this is done through the `arrange` function.
+
+```{r}
+arrange1 <- arrange(flights, desc(is.na(dep_time)), dep_time)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange1[1:8,1:10], caption = "Small view of Arrange1.")
+```
+
+### *Item 2 - Sort `flights` to find the most delayed flights. Find the flights that left earliest:*
+
+The most delayed flights are found by sorting the table by departure delay, `dep_delay`, in descending order; this is done through the `arrange` function.
+
+```{r}
+arrange2 <- arrange(flights, desc(dep_delay))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange2[1:8,1:10], caption = "Small view of Arrange2.")
+```
+
+Then, the most delayed flight was HA 51, JFK to HNL, which was scheduled to leave on January 09, 2013 09:00, but the departure was delayed 1,301 minutes, which is 21 hours, 41 minutes.
+
+Similarly, the earliest departing flight can be found by sorting `dep_delay` in ascending order; this is done through the `arrange` function.
+
+```{r}
+arrange3 <- arrange(flights, dep_delay)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange3[1:8,1:10], caption = "Small view of Arrange3.")
+```
+
+So, the flight that left earliest was flight B6 97 (JFK to DEN) scheduled to depart on December 07, 2013 at 21:23 departed 43 minutes early.
+
+### *Item 3 - Sort `flights` to find the fastest (highest speed) flights:*
+
+"Fastest flight" can be interpreted in two ways. The first as "the flight with the shortest flight time" (arrange4) and the second as "the flight with the highest average forward speed" (arrange5); this is done through the `arrange` function.
+
+```{r}
+arrange4 <- head(arrange(flights, air_time))
+arrange5 <- head(arrange(flights, desc(distance / air_time)))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange4[1:6,1:10], caption = "Small view of Arrange4.")
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange5[1:6,1:10], caption = "Small view of Arrange5.")
+```
+
+### *Item 4 - Which flights travelled the farthest? Which travelled the shortest?:*
+
+The terms "farthest" and "shortest" could refer to the time of the flight instead of the distance. The farthest and shortest flights by can be found by sorting by the air_time column. The farthest flights by airtime are the following; this is done through the `arrange` function.
+
+```{r}
+arrange6 <- arrange(flights, desc(air_time))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange6[1:8,1:10], caption = "Small view of Arrange6.")
+```
+
+On the other hand, the shortest flights by airtime are the following; this is done through the `arrange` function.
+
+```{r}
+arrange7 <- arrange(flights, air_time)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(arrange7[1:8,1:10], caption = "Small view of Arrange7.")
+```
+
+## 5.4.1 Exercises
+
+### *Item 2 - What happens if you include the name of a variable multiple times in a `select()` call?:*
+
+The `select()` call ignores the duplication. So, any duplicated variables are only included once, in the first location they appear; this is done through the `select` function.
+
+```{r}
+select1 <- select(flights, year, month, day, year, year)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(select1[1:8,1:3], caption = "Small view of Select1.")
+```
+
+### *Item 3 - What does the `any_of()` function do? Why might it be helpful in conjunction with this vector?:*
+
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+```
+
+The `any_of()` function selects variables with a character vector rather than unquoted variable name arguments. This function is useful because it is easier to programmatically generate character vectors with variable names than to generate unquoted variable names, which are easier to type; this is done through the `select` function.
+
+```{r}
+select2 <- select(flights, any_of(vars))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(select2[1:8,1:5], caption = "Small view of Select2.")
+```
+
+### *Item 4 - Does the result of running the following code surprise you? How do the select helpers deal with case by default? How can you change that default?:*
+
+```{r}
+select(flights, contains("TIME"))
+```
+
+It's surprising since, the default behavior for `contains()` is to ignore case. This is important because users searching for variable names probably have a better sense of the letters in the variable than their capitalization. On the other hand, some of database engines have case insensitive column names, so making functions that match variable names case insensitive by default will make the behavior of `select()` consistent regardless of whether the table is stored as an R data frame or in a database. Finally, to change the behavior it is necessary to add the argument `ignore.case = FALSE`; this is done through the `select` function.
+
+```{r}
+select3 <- select(flights, contains("TIME", ignore.case = FALSE))
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(select3[1:8,0:0], caption = "Small view of Select3.")
+```
+
+As can be seen, Table does not appear.
+
+## 5.5.2 Exercises
+
+### *Item 1 - Currently `dep_time` and `sched_dep_time` are convenient to look at, but hard to compute with because they're not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight:*
+
+It could define a function `time2mins()`, which converts a vector of times in from the format used in flights to minutes since midnight.
+
+```{r}
+time2mins <- function(x) {(x %/% 100 * 60 + x %% 100) %% 1440}
+```
+
+Using the function, the previous code simplifies to the following; this is done through the `mutate` function.
+
+```{r}
+mutate1 <- mutate(flights, dep_time_mins = time2mins(dep_time), 
+                  sched_dep_time_mins = time2mins(sched_dep_time))
+```
+
+Additionally, to show only the relevant columns do the following; this is done through the `select` function.
+
+```{r}
+select4 <- select(mutate1, dep_time, dep_time_mins, sched_dep_time, sched_dep_time_mins)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(select4[1:8,1:4], caption = "Small view of Select4.")
+```
+
+### *Item 2 - Compare `air_time` with `arr_time - dep_time`. What do you expect to see? What do you see? What do you need to do to fix it?:*
+
+I expect that `air_time` is the difference between the arrival `(arr_time)` and departure times `(dep_time)`. In other words, `air_time = arr_time - dep_time`. What I can see is that `air_time` is not equal to `arr_time - dep_time`, because: 1. The flight passes midnight, so `arr_time < dep_time`. In these cases, the difference in airtime should be by 24 hours (1,440 minutes) and 2. The flight crosses time zones, and the total `air time` will be off by hours (multiples of 60). All flights in flights departed from New York City and are domestic flights in the US. This means that flights will all be to the same or more westerly time zones. Given the time-zones in the US, the differences due to time-zone should be 60 minutes (Central) 120 minutes (Mountain), 180 minutes (Pacific), 240 minutes (Alaska), or 300 minutes (Hawaii). Finally, To fix these time-zone issues, I would want to convert all the times to a date-time to handle overnight flights, and from local time to a common time zone, most likely UTC, to handle flights crossing time-zones, leaning on that, the relationship between `air_time`, `arr_time`, and `dep_time` is `air_time <= arr_time - dep_time`, supposing that the time zones of `arr_time` and `dep_time` are in the same time zone.
+
+## 5.6.7 Exercises
+
+### *Item 1 - Brainstorm at least 5 different ways to assess the typical delay characteristics of a group of flights. Consider the following scenarios:*
+
+-   ***A flight is 15 minutes early 50% of the time, and 15 minutes late 50% of the time.***
+
+-   ***A flight is always 10 minutes late.***
+
+-   ***A flight is 30 minutes early 50% of the time, and 30 minutes late 50% of the time.***
+
+-   ***99% of the time a flight is on time. 1% of the time it\'s 2 hours late.***
+
+### ***Which is more important: arrival delay or departure delay?:***
+
+-   What this question gets at is a fundamental question of data analysis: the cost function. As analysts, the reason it is interested in flight delay because it is costly to passengers. But it is worth thinking carefully about how it is costly and use that information in ranking and measuring these scenarios.
+
+-   In many scenarios, arrival delay is more important. In most cases, being arriving late is more costly to the passenger since it could disrupt the next stages of their travel, such as connecting flights or scheduled meetings.
+
+-   If a departure is delayed without affecting the arrival time, this delay will not have those affects plans nor does it affect the total time spent traveling.
+
+-   This delay could be beneficial, if less time is spent in the cramped confines of the airplane itself, or a negative, if that delayed time is still spent in the cramped confines of the airplane on the runway.
+
+-   Variation in arrival time is worse than consistency. If a flight is always 30 minutes late and that delay is known, then it is as if the arrival time is that delayed time. The traveler could easily plan for this. But higher variation in flight times makes it harder to plan.
+
+## 5.7.1 Exercises
+
+### *Item 2 - Which plane (`tailnum`) has the worst on-time record?:*
+
+For a more exact result, it is decided to choose the plane with the worst time record that made at least 20 flights. Through the average number of minutes late, it obtain the following.
+
+```{r}
+groupedmutate <- flights %>% filter(!is.na(arr_delay)) %>% 
+group_by(tailnum) %>% summarise(arr_delay = mean(arr_delay), n = n())%>% 
+filter(n >= 20) %>% filter(min_rank(desc(arr_delay)) == 1)
+```
+
+```{r echo = FALSE}
+library(knitr)
+kable(groupedmutate[1:1,1:3], caption = "Small view of Groupedmutate.")
+```
