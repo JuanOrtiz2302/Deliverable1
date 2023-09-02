@@ -1,5 +1,5 @@
 ExercisesPart1 <- function(option)
-  {
+{
 library("nycflights13")
 library("tidyverse")
 allflights <- nycflights13::flights
@@ -22,4 +22,5 @@ filter7 <- filter(flights, dep_time <= 600 | dep_time == 2400)
 # Exercise 5.2.4 - Item 2: Another useful dplyr filtering helper is between(). What does it do? Can you use it to simplify the code needed to answer the previous challenges?:
 # Answer: Yes, because the expression between(x, left, right) is equivalent to x >= left & x <= right. So, of the answers in the previous exercise, we could simplify the statement of departed in summer (month >= 7 & month <= 9) using the between() function.
 filter8 <- filter(flights, between(month, 7, 9))
-  }
+}
+
