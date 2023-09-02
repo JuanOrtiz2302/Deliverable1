@@ -12,3 +12,4 @@ LazyData: true
 Imports: 
     dplyr,
     tidyr
+RoxygenNote: 7.2.3
